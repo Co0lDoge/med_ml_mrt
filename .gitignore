@@ -27,3 +27,6 @@ bin
 *weights
 *test
 *test_data
+
+# mask template (T1)
+ml_service/ml_service/models/nnunet/template_mask.tif
