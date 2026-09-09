@@ -22,3 +22,8 @@ bin
 *.key
 *.pem
 *.env
+
+# weights
+*weights
+*test
+*test_data

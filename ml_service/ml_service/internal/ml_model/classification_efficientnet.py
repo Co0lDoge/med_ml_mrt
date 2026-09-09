@@ -3,7 +3,6 @@ from torch import nn
 from torchvision.models import efficientnet_b6 as efficientnet_b6
 from torch.nn import functional as F
 from torchvision import transforms as T
-from imgaug import augmenters as iaa
 
 # from model_template_class import ModelABC, settings
 from ml_service.internal.ml_model.neuro_class import ModelABC
@@ -23,11 +22,10 @@ class EfficientNetModel(ModelABC):
         # self.load(path=settings['classification'][self.model_type])
         self.load(path=settings['classification']['all'])
         self.transform = T.Compose([
-            iaa.Sequential([
-            iaa.Resize({"height": 224, "width": 224})
-            ]).augment_image,
+            T.ToPILImage(),
+            T.Resize((224, 224)),
             T.ToTensor(),
-            T.Normalize((0.24), (0.12))
+            T.Normalize((0.24,), (0.12,))
         ])
 
     def load(self, path: str) -> None:

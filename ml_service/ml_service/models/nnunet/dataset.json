@@ -1,0 +1,12 @@
+{
+    "channel_names": {
+        "0": "T1c",
+        "1": "T2"
+    },
+    "labels": {
+        "background": 0,
+        "adenoma": 1
+    },
+    "numTraining": 900,
+    "file_ending": ".nii.gz"
+}
