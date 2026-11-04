@@ -1,4 +1,6 @@
 import os
+import json
+import cv2
 import multiprocessing
 
 try:
@@ -15,7 +17,8 @@ settings = {
     'test_t1': './test_data/patient_T1.tif',
     'test_t2': './test_data/patient_T2.tif',
     'test_mask': './test_data/patient_T1_MASK.tif',
-    'output_dir': './test_data'
+    'output_dir': './test_data',
+    'frontend_app_dir': './frontend/apps/mri/app'
 }
 
 os.environ['nnUNet_results'] = os.path.abspath(settings['nnunet'])
@@ -46,6 +49,46 @@ def save_and_evaluate(parsed_slices: list, result_masks: list, output_dir: str, 
     mask_nii = nib.Nifti1Image(np.transpose(pred_vol.astype(np.uint8), (1, 2, 0)), affine)
     nii_path = os.path.join(output_dir, 'predicted_mask.nii.gz')
     nib.save(mask_nii, nii_path)
+
+    # Генерация координат контуров для фронтенда
+    segments = []
+    series_id = 'S2'
+
+    for z, slice_mask in enumerate(result_masks):
+        if np.sum(slice_mask) == 0:
+            continue
+
+        contours, _ = cv2.findContours(slice_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for c_idx, contour in enumerate(contours):
+            pts = contour.squeeze()
+            if pts.ndim != 2 or len(pts) < 3:
+                continue
+
+            point_list = [
+                {'x': int(pt[0]), 'y': int(pt[1]), 'sliceIndex': int(z)}
+                for pt in pts
+            ]
+
+            segments.append({
+                'id': f'seg_{z}_{c_idx}',
+                'seriesId': series_id,
+                'label': 'Аденома гипофиза (nnU-Net 3D)',
+                'color': '#FF3B30',
+                'visibleByDefault': True,
+                'points': point_list
+            })
+
+    output_json = os.path.join(output_dir, 'segments.json')
+    with open(output_json, 'w', encoding='utf-8') as f:
+        json.dump(segments, f, ensure_ascii=False, indent=2)
+
+    frontend_dir = settings['frontend_app_dir']
+    if os.path.exists(frontend_dir):
+        frontend_json = os.path.join(frontend_dir, 'segments.json')
+        with open(frontend_json, 'w', encoding='utf-8') as f:
+            json.dump(segments, f, ensure_ascii=False, indent=2)
+
+    print(f'Extracted {len(segments)} contour segments across active slices')
 
     gt_vol = None
     dice_score = None
@@ -118,12 +161,6 @@ class DummyClassificationModel:
         self.model_type = model_type
 
     def predict(self, rois: list) -> tuple:
-        """
-        args:
-            rois: массив узлов по срезам
-        return:
-            individual_probs, tracked_nodules_probs
-        """
         individual_probs = []
         tracked_nodules_probs = {}
 
