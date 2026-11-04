@@ -29,11 +29,15 @@ class EfficientNetModel(ModelABC):
         ])
 
     def load(self, path: str) -> None:
+        import os
         self._model = efficientnet_b6()
         self._model.features[0][0] = nn.Conv2d(1, 56, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
         self._model.classifier[1] = nn.Linear(2304, 3) # Текущее количество классов равно 3: 0 - knosp 0-1-2, 1 - knosp 3, 2 - knosp 4
         self._model.to(self.device)
-        self._model.load_state_dict(torch.load(path, map_location=self.device))
+        if os.path.exists(path):
+            self._model.load_state_dict(torch.load(path, map_location=self.device))
+        else:
+            print(f"[WARN] Classification weights not found at {path}. Using initial weights.")
         self._model.eval()
 
     def preprocessing(self, image_array: object) -> object:

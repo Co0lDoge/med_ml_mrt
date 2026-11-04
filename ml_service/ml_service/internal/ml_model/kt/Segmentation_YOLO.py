@@ -39,8 +39,13 @@ def video_to_npy_channel3(video_data, target_frames=54, target_size=(224, 224)):
 
 class SegmentationModel:
     def __init__(self) -> None:
+        import os
         model_path = "./ml_service/internal/ml_model/models/kt/yolo_seg_small_040325.pt"
-        self.model = YOLO(model_path)
+        if os.path.exists(model_path):
+            self.model = YOLO(model_path)
+        else:
+            print(f"[WARN] YOLO segmentation weights not found at {model_path}.")
+            self.model = None
     
     
     def predict(self, video_bytes,  target_frames=54, target_size=(224, 224), 
