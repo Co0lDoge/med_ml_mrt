@@ -15,8 +15,9 @@ class DefaultSettings(BaseSettings):
     kafka_host: str = "localhost"
     kafka_port: int = 9092
 
-    segmentation_model_type: str = "cross"
+    segmentation_model_type: str = "nnunet"
     classification_model_type: str = "cross"
+    nnunet_model_dir: str = "./models/nnunet"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

@@ -22,3 +22,8 @@ bin
 *.key
 *.pem
 *.env
+
+
+# frontend (independent repository)
+frontend/
+/_test_data/

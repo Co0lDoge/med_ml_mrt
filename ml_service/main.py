@@ -30,7 +30,12 @@ def run_server():
     mri_s3 = mys3.S3(minio_client, mri_bucket)
     kt_s3 = mys3.S3(minio_client, kt_bucket)
 
-    segmdl = seg.SegmentationModel(model_type=settings.segmentation_model_type)
+    if settings.segmentation_model_type == "nnunet":
+        import ml_service.internal.ml_model.nnunet_segmentation as nn_seg
+        segmdl = nn_seg.NnUNetSegmentationModel(model_dir=settings.nnunet_model_dir)
+    else:
+        segmdl = seg.SegmentationModel(model_type=settings.segmentation_model_type)
+        
     claml = cla.EfficientNetModel(model_type=settings.classification_model_type)
     ktcla_model = ktcla.ClassificationModel()
     ktseg_model = ktseg.SegmentationModel()
