@@ -9,6 +9,7 @@ services:
   postgres:
     container_name: postgres
     image: postgres:17-alpine
+    restart: "no"
     env_file:
       - .env.example
     volumes:
@@ -16,7 +17,6 @@ services:
       - ./init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh:ro
     ports:
       - "5433:5432"
-    restart: always
     profiles:
       - deps
       - app
@@ -32,6 +32,7 @@ services:
   minio:
     container_name: minio-s3
     image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+    restart: "no"
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -47,12 +48,12 @@ services:
     profiles:
       - deps
       - app
-    restart: always
 
   ##################
   # Redpanda Brokers #
   ##################
   redpanda-0:
+    restart: "no"
     command:
       - redpanda
       - start
@@ -93,6 +94,7 @@ services:
   console:
     container_name: redpanda-console
     image: docker.redpanda.com/redpandadata/console:v2.8.0
+    restart: "no"
     entrypoint: /bin/sh
     command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console -config.filepath=${CONFIG_FILEPATH:-/tmp/config.yml}'
     volumes:
@@ -102,9 +104,9 @@ services:
       CONSOLE_CONFIG_FILE: |
         kafka:
           brokers: ["redpanda-0:9092"]
-          schemaRegistry:
-            enabled: true
-            urls: ["http://redpanda-0:8081"]
+        schemaRegistry:
+          enabled: true
+          urls: ["http://redpanda-0:8081"]
         redpanda:
           adminApi:
             enabled: true
@@ -119,6 +121,7 @@ services:
 
   ml_service:
     container_name: ml_service
+    restart: "no"
     build: 
       context: ./ml_service/
       dockerfile: Dockerfile
@@ -131,13 +134,14 @@ services:
 
   auth_service:
     container_name: auth_service
+    restart: "no"
     build:
       context: ./auth/
       dockerfile: Dockerfile
     env_file:
       - ./auth/.env-docker
     ports:
-      - 50040:50055
+      - 40040:50055
     depends_on:
       postgres:
         condition: service_healthy
@@ -146,13 +150,14 @@ services:
 
   med_service:
     container_name: med_service
+    restart: "no"
     build:
       context: ./med/
       dockerfile: Dockerfile
     env_file:
       - ./med/.env-docker
     ports:
-      - 50050:50055
+      - 40050:50055
     depends_on:
       postgres:
         condition: service_healthy
@@ -161,13 +166,14 @@ services:
 
   exam_service:
     container_name: exam_service
+    restart: "no"
     build:
       context: ./exam/
       dockerfile: Dockerfile
     env_file:
       - ./exam/.env-docker
     ports:
-      - 50060:50055
+      - 40060:50055
     depends_on:
       postgres:
         condition: service_healthy
@@ -178,6 +184,7 @@ services:
     
   composition_api:
     container_name: composition_api
+    restart: "no"
     build:
       context: ./composition-api/
       dockerfile: Dockerfile
